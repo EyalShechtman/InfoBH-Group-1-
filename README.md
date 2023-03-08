@@ -1,5 +1,3 @@
-# InfoBH-Group-1-
-
 library(shiny)
 library(tidyverse)
 data <- read_delim('COVID19_state.csv')
@@ -12,7 +10,7 @@ ui <- fluidPage(
   
   tabsetPanel(
     tabPanel(
-      "Introduction",
+      "Introduction",h3("Introduction"),
       sidebarLayout(
         p(
           "For our project we are analyzing a ",
@@ -32,15 +30,25 @@ ui <- fluidPage(
       )
     ),
     
-    tabPanel("Income", plotOutput("income"), textOutput("incomeText"), sidebarLayout
-             (sidebarPanel
-               (sliderInput(inputId = "income", label = "Select the range of years", value = c(0,74561),min = 0, max = 74561)),
+    tabPanel("Income", 
+             sidebarLayout(
+               sidebarPanel(
+                 h3("Income"), p("This page will explore whether there is a correlation between the",strong("Average Income"), 
+                   "of a certain state and its amount of COVID-19", strong("Tests and Infections.")), 
+                 p("You will be able to choose which variable you want to compare to average Income below."),
+                 sliderInput(
+                   inputId = "income", label = "Select the range of Average income", value = c(0,74561),min = 0, max = 74561)),
+               selectInput('yvar', 'Y variable', c("Tested", "Infected"))), 
+             mainPanel(
+               plotOutput("income"), textOutput("incomeText")
+             )
+    ),
                
                
-               tabPanel(“GDP”,
+               tabPanel("GDP",
                          sidebarLayout(
                            sidebarPanel(
-                             h5("On this page we will be exploring the effect GDP per capita and average income had on the number of deaths from COVID-19. It will answer questions regarding the number of deaths in each state, the income and GDP for those states in correspondence with the number of deaths, and how GDP or Income may have influenced more or less deaths in each state. On the Y-Axis of this chart we see each state, depending on the number chosen from the slider, and on the X-axis we see the number of deaths in each state. The legend on the graph will depend on whether GDP or Income has been selected. It will rank the highest (red) to lowest (blue) and color the states according to there Income and GDP rate."),
+                             h3("GDP"),h5("On this page we will be exploring the effect GDP per capita and average income had on the number of deaths from COVID-19. It will answer questions regarding the number of deaths in each state, the income and GDP for those states in correspondence with the number of deaths, and how GDP or Income may have influenced more or less deaths in each state. On the Y-Axis of this chart we see each state, depending on the number chosen from the slider, and on the X-axis we see the number of deaths in each state. The legend on the graph will depend on whether GDP or Income has been selected. It will rank the highest (red) to lowest (blue) and color the states according to there Income and GDP rate."),
                              br(),
                              selectInput("xvar", "Select variable for x-axis:",
                                          choices = c("GDP", "Income"), selected = "Income"),
@@ -49,13 +57,15 @@ ui <- fluidPage(
                            ),
                            mainPanel(
                              plotOutput("histogram", width = "700px", height = "750px")
-                           ),
+                           )
+                           )
+                        ),
                            
                            tabPanel("Infection Rate",
                                     #Relationship between population density and rate of infections:
                                     sidebarLayout(
                                       sidebarPanel(
-                                        p("In this section, we can explore the relationship between", em("population
+                                        h3("Infection Rate"),p("In this section, we can explore the relationship between", em("population
                     density"), "and the", em("infection rate"), "for every state."),
                                         p("We can also look to see if states with different", strong("ranges of income per capita"), 
                                           "have obviously different infection rates."),
@@ -90,34 +100,55 @@ ui <- fluidPage(
                            ),
                            tabPanel(
                              "Conclusion",
-                             p(
-                               "There is a negative correlation between the amount of health spending and the infection rate.
+                             h3("Conclusion"),
+                             p("When comparing", strong("average income and tests"), "within states, we found  some data that suggests there is a" , strong("positive"), 
+                             "correlation between the two, meaning that when one increases,
+  so does the other. When comparing", strong("average income and infections", "the data suggests that there is nearly no correlation between the two.")), 
+  p("There is a 
+  negative correlation between the amount of health spending and the infection rate.
          Which means that states that spent more on health services had lower infection rates.
-         Economists and politicians can look at this and use it  learn for future epidemics.
-         We believe that the data is of reasonable quality and that it gives unbiased results.
-         A problem that arises is that the data only shows state data while it could vary greatly
-         between the cities within the states. Some of the graphs showed correlation but it was also 
+         Economists and politicians can look at this and use it to learn for future epidemics."), 
+         p("When speaking of GDP VS deaths, we saw no pattern that suggests correlation between GDP per Capita
+                                                                                                    and death from COVID 19."), 
+          p("Some of the graphs showed correlation but it was also 
          correlated to the population of the states.
-         So while these correlations may appear does not mean there is causation.
-         A more thorough examination could look at regions within each city and look at test accessibility."
-                             )
+         So while these correlations may appear does not mean there is causation.A more thorough examination could look at 
+          regions within each city and look at test accessibility. Also, if we had a larger sample of data, it would be much easier to recognize meaningful patterns.")
                            )
                            
                          )
                )
                
-               server <- function(input, output) {
+              
+    
+    
+     server <- function(input, output) {
                  data1 <- reactive({
-                   subset(data, Income>input$income[1] & Income<input$income[2])
-                 })
-                 output$income <- renderPlot({
-                   data1() %>% 
-                     ggplot(aes(Income, Tested))+geom_point()
-                 }) 
-                 output$incomeText <- renderPrint({
-                   paste(input$income[1],"is the number", mean(data1()$Income))
+                   data %>% 
+                     filter(Income>input$income[1], Income<input$income[2])
                  })
                  
+                 
+                 output$income <- renderPlot({
+                   if(input$yvar == "Tested"){
+                     data1() %>% 
+                       ggplot(aes(Income, Tested))+geom_point()+labs(title = "Graph of The Average Income VS COVID 19 Tests in States")+geom_smooth() 
+                   }else{
+                     data1() %>% 
+                       ggplot(aes(Income, Infected))+geom_point()+labs(title = "Graph of The Average Income VS COVID 19 Infections in States")+geom_smooth()+
+                       scale_color_manual(breaks = c(40000.50000,60000,70000), values = c("red", "yellow", "skyblue", "green"))
+                   }
+                 })
+                 output$incomeText <- renderText({
+                   if(input$yvar == "Tested"){
+                     "As we can see by the graph, one can tell by the best line fit that as Average Income increases, 
+      the amount of COVID-19 tests conducted increase as well. This is still not a perfect graph as we only have a couple of high-end average income states, so it is hard to 
+      tell the exact correlation with such a little data sample."
+                   }else{
+                     "This graph shows that no matter what the average income was in states, no one could escape COVID-19. Prior to this, I expected those same high income states to have very high 
+      infections, as they would have more access to tests, therefore would have more cases; nevertheless, this does not seem to be the case. Also, this does not take population size 
+      into consideration"} 
+                 })
                  sorted_data <- reactive({
                    if (input$xvar == "GDP") {
                      data %>% 
