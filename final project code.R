@@ -1,3 +1,6 @@
+#Link to shinyapp: https://eyalshechtman.shinyapps.io/Final_Project/
+
+
 library(shiny)
 library(tidyverse)
 data <- read_delim('COVID19_state.csv')
