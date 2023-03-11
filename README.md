@@ -132,7 +132,7 @@ A more thorough examination could look at regions within each city and look at t
 
 
 server <- function(input, output) {
-  # Slider for Income Range
+  #Slider for Income Range
   data1 <- reactive({
     data %>% 
       filter(Income>input$income[1], Income<input$income[2])
@@ -160,7 +160,7 @@ server <- function(input, output) {
       infections, as they would have more access to tests, therefore would have more cases; nevertheless, this does not seem to be the case. Also, this does not take population size 
       into consideration"} 
   })
-  # SECTION 2: GDP AND STATES
+  #SECTION 2: GDP AND STATES
   sorted_data <- reactive({
     if (input$xvar == "GDP") {
       data %>% 
@@ -171,7 +171,7 @@ server <- function(input, output) {
     }
   })
   
-  # Histogram for states and deaths ranked by variable
+  #Histogram for states and deaths ranked by variable
   output$histogram <- renderPlot({
     ggplot(sorted_data() %>% head(input$n_states), aes(x = reorder(State, -!!sym(input$xvar)), y = Deaths, fill = !!sym(input$xvar))) +
       geom_col() +
